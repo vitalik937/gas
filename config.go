@@ -12,9 +12,9 @@ import (
 type Config struct {
 }
 
-func (c *Config) Load(appName string, recurse bool) error {
+func (c *Config) Load(appName string, configFileName string, recurse bool) error {
 	viper.Reset()
-	viper.SetConfigName("config")
+	viper.SetConfigName(configFileName)
 
 	if recurse {
 		loadConfigFileRecursively()
@@ -36,7 +36,9 @@ func loadConfigFileRecursively() error {
 	arr := strings.Split(wd+"/", "/")
 	i := len(arr) - 1
 	for i > 1 {
-		viper.AddConfigPath(strings.Join(arr[0:i], "/"))
+		fp := strings.Join(arr[0:i], "/")
+		log.Println("Attempting to load config file from:", fp)
+		viper.AddConfigPath(fp)
 		i--
 	}
 	return err
