@@ -12,12 +12,12 @@ import (
 type Config struct {
 }
 
-func (c *Config) Load(appName string, configFileName string, recurse bool) error {
+func (c *Config) Load(appName string, configFilename string, recurse bool) error {
 	viper.Reset()
-	viper.SetConfigName(configFileName)
+	viper.SetConfigName(strings.Split(configFilename, ".")[0])
 
 	if recurse {
-		loadConfigFileRecursively()
+		loadConfigFileRecursively(configFilename)
 	}
 
 	err := viper.ReadInConfig()
@@ -27,7 +27,7 @@ func (c *Config) Load(appName string, configFileName string, recurse bool) error
 	return err
 }
 
-func loadConfigFileRecursively() error {
+func loadConfigFileRecursively(configFilename string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Panicln("An error occurred in gas while trying to get the calling app's working directory:", err)
@@ -36,9 +36,14 @@ func loadConfigFileRecursively() error {
 	arr := strings.Split(wd+"/", "/")
 	i := len(arr) - 1
 	for i > 1 {
-		fp := strings.Join(arr[0:i], "/")
-		log.Println("Attempting to load config file from:", fp)
-		viper.AddConfigPath(fp)
+		fp := strings.Join(arr[0:i], "/") + "/"
+		log.Println("attempting to load config file from:", fp)
+		// see if config file exists for the current path
+		if _, err := os.Stat(fp + configFilename); err == nil {
+			log.Println("found "+configFilename+" in:", fp)
+			viper.AddConfigPath(fp)
+			break
+		}
 		i--
 	}
 	return err
